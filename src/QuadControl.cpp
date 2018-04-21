@@ -45,6 +45,8 @@ void QuadControl::Init()
 
   minMotorThrust = config->Get(_config + ".minMotorThrust", 0);
   maxMotorThrust = config->Get(_config + ".maxMotorThrust", 100);
+    
+  I = V3F(config->Get(_config + ".Ixx", 0), config->Get(_config + ".Iyy", 0), config->Get(_config + ".Izz", 0));
 #else
   // load params from PX4 parameter system
   //TODO
@@ -97,9 +99,9 @@ V3F QuadControl::BodyRateControl(V3F pqrCmd, V3F pqr)
   V3F momentCmd;
 
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
-
-  
-
+    V3F pqrErr = pqrCmd - pqr;
+    momentCmd = kpPQR * pqrErr;
+    momentCmd *= I;
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
   return momentCmd;
@@ -128,8 +130,22 @@ V3F QuadControl::RollPitchControl(V3F accelCmd, Quaternion<float> attitude, floa
   Mat3x3F R = attitude.RotationMatrix_IwrtB();
 
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
-
-
+    float bX = R(0, 2);
+    float xDotDotCmd = accelCmd[0];
+    float bXC = xDotDotCmd * mass / collThrustCmd;
+    float bXErr = bXC - bX;
+    float bXPTerm = kpBank * bXErr;
+    
+    float bY = R(1, 2);
+    float yDotDotCmd = accelCmd[1];
+    float bYC = yDotDotCmd * mass / collThrustCmd;
+    float bYErr = bYC - bY;
+    float bYPTerm = kpBank * bYErr;
+    
+    float pCmd = (1.0 / R(2, 2)) * (R(1, 0) * bXC - R(0, 0) * bYC);
+    float rCmd = (1.0 / R(2, 2)) * (R(1, 0) * bXC - R(0, 1) * bYC);
+    
+    return V3F(pCmd, rCmd, 0.0);
 
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
@@ -160,9 +176,16 @@ float QuadControl::AltitudeControl(float posZCmd, float velZCmd, float posZ, flo
   float thrust = 0;
 
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
-
-
-
+    float zErr = posZCmd - posZ;
+    float zVErr = velZCmd - velZ;
+    // TODO: Figure out how to use max ascent/descent rates
+    float bZ = R(2, 2);
+    float pTerm = kpPosZ * zErr;
+    float dTerm = kpVelZ * zVErr;
+    float u1Bar = pTerm + dTerm + accelZCmd;
+    
+    thrust = (u1Bar - 9.81f) / bZ;
+    
   /////////////////////////////// END STUDENT CODE ////////////////////////////
   
   return thrust;
@@ -194,8 +217,29 @@ V3F QuadControl::LateralPositionControl(V3F posCmd, V3F velCmd, V3F pos, V3F vel
   posCmd.z = pos.z;
 
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
-
+    float xC = posCmd[0];
+    float xDotC = velCmd[0];
+    float x = pos[0];
+    float xDot = vel[0];
+    float xDotDotTarget = accelCmd[0];
+    float xErr = xC - x;
+    float xErrDot = xDotC - xDot;
+    float pTermX = kpPosXY * xErr;
+    float dTermX = kpVelXY * xErrDot;
+    float xDotDotCommanded = pTermX + dTermX + xDotDotTarget;
+    
+    float yC = posCmd[1];
+    float yDotC = velCmd[1];
+    float y = pos[1];
+    float yDot = vel[1];
+    float yDotDotTarget = accelCmd[1];
+    float yErr = yC - y;
+    float yErrDot = yDotC - yDot;
+    float pTermY = kpPosXY * yErr;
+    float dTermY = kpVelXY * yErrDot;
+    float yDotDotCommanded = pTermY + dTermY + yDotDotTarget;
   
+    return V3F(xDotDotCommanded, yDotDotCommanded, 0.0);
 
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
@@ -217,7 +261,9 @@ float QuadControl::YawControl(float yawCmd, float yaw)
 
   float yawRateCmd=0;
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
-
+    float psiErr = yawCmd - yaw;
+    float rC = kpYaw * psiErr;
+    return rC;
 
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
