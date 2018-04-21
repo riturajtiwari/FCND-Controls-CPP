@@ -38,6 +38,9 @@ public:
   float kpBank, kpYaw;
   float KiPosZ;
   V3F kpPQR;
+    
+  // Physical properties
+  V3F I;
   
   // limits & saturations
   float maxAscentRate, maxDescentRate;
