@@ -150,6 +150,8 @@ With the proper mass, your simulation should look a little like this:
 <img src="animations/scenario1.gif" width="500"/>
 </p>
 
+#### My Notes #### 
+I tweaked the mass a few times to get the drone to hover. I finally arrived at a value of `Mass = 0.4865` as the ideal figure for my setup
 
 ## The Tasks ##
 
@@ -165,7 +167,12 @@ You may find it helpful to consult the [Python controller code](https://github.c
 3. **Parameter Ratios**: In this [one-page document](https://www.overleaf.com/read/bgrkghpggnyc#/61023787/) you can find a derivation of the ratio of velocity proportional gain to position proportional gain for a critically damped double integrator system. The ratio of `kpV / kpP` should be 4.
 
 ### Body rate and roll/pitch control (scenario 2) ###
+#### My Notes #### 
+I referred to my implementation from the Python portion. I implemented the motor command generation code by following the physics of the drone where the axis is 45 degrees to the body frame for purpose of moment calculations. This results in the length of the moment arm being `L / sqrtf(2.f)`. This was followed by the math of solving for the individal motor thrusts given the needs of individual moments as well as total thrust needed.
 
+The body rate controller was implememted simply as a P controller by setting the commanded moments to be proportional to the measured error in the body rate. I tuned the parameter `kpPQR` to achieve the objective.
+
+#### Original Text #### 
 First, you will implement the body rate and roll / pitch control.  For the simulation, you will use `Scenario 2`.  In this scenario, you will see a quad above the origin.  It is created with a small initial rotation speed about its roll axis.  Your controller will need to stabilize the rotational motion and bring the vehicle back to level attitude.
 
 To accomplish this, you will:
@@ -194,6 +201,12 @@ If successful you should now see the quad level itself (as shown below), though 
 
 
 ### Position/velocity and yaw angle control (scenario 3) ###
+#### My Notes #### 
+Implemented altitude control based on my previous Python implementation. I used `CONSTRAIN()` to limit the commanded velocity to be within the min/max range for ascent/descent rate. This was initially done as a PD controller.
+
+Similarly, laterial positon control was implemented by porting over the exercises from the Phython notebook. This is a PD controller with lateral XY acceleration constrained to `maxAccelXY`. For some reason, the advise of velocity gains being 3-4 times of the position gains did not work for me.
+
+#### Original Text #### 
 
 Next, you will implement the position, altitude and yaw control for your quad.  For the simulation, you will use `Scenario 3`.  This will create 2 identical quads, one offset from its target point (but initialized with yaw = 0) and second offset from target point but yaw = 45 degrees.
 
@@ -216,6 +229,10 @@ Tune position control for settling time. Don’t try to tune yaw control too tig
 **Hint:**  For a second order system, such as the one for this quadcopter, the velocity gain (`kpVelXY` and `kpVelZ`) should be at least ~3-4 times greater than the respective position gain (`kpPosXY` and `kpPosZ`).
 
 ### Non-idealities and robustness (scenario 4) ###
+#### My Notes #### 
+Added integral control to `AltitudeControl()` making it a full PID controller. Tuned parameters and played around with a couple of ways of contraining ascent and descent rates.
+
+#### Original Text #### 
 
 In this part, we will explore some of the non-idealities and robustness of a controller.  For this simulation, we will use `Scenario 4`.  This is a configuration with 3 quads that are all are trying to move one meter forward.  However, this time, these quads are all a bit different:
  - The green quad has its center of mass shifted back
@@ -234,6 +251,10 @@ In this part, we will explore some of the non-idealities and robustness of a con
 
 
 ### Tracking trajectories ###
+#### My Notes #### 
+Required multiple iterations or tuning parameters. Final challenge was to track the `z` position correctly. this needed tuning position and velocity gains for z repeatedly
+
+#### Original Text #### 
 
 Now that we have all the working parts of a controller, you will put it all together and test it's performance once again on a trajectory.  For this simulation, you will use `Scenario 5`.  This scenario has two quadcopters:
  - the orange one is following `traj/FigureEight.txt`
