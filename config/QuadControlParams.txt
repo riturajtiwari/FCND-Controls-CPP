@@ -21,6 +21,10 @@ maxMotorThrust = 4.5
 # Position control gains
 kpPosXY = 33
 kpPosZ = 50
+# Set KiPosZ to 18.05 for scenario 4 and 7.5 for scenario 5
+# This value passes scenario 4
+# KiPosZ = 18.05
+# This value passes scenario 5
 KiPosZ = 7.5
 
 # Velocity control gains
@@ -33,7 +37,7 @@ kpYaw = 2
 
 # Angle rate gains
 # kpPQR = 23, 23, 5
-kpPQR = 75, 75, 10
+kpPQR = 75, 75, 8
 
 # limits
 maxAscentRate = 5
